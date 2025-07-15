@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: jato
+      POSTGRES_PASSWORD: jato123
+      POSTGRES_DB: jatohub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg2://jato:jato123@db:5432/jatohub
+      SECRET_KEY: supersecretkey
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data: 
